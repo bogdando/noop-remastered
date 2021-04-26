@@ -33,4 +33,7 @@ else
   gem 'puppet', :require => false
 end
 
+gem 'msgpack'
+gem 'pry'
+
 # vim:ft=ruby

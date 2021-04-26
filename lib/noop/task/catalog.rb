@@ -1,7 +1,18 @@
 require 'erb'
+require 'json'
 
 module Noop
   class Task
+
+    # Dumps the entire catalog structure to JSON
+    # @param env [String] the puppet environment to use for the compiled
+    # catalog JSON file
+    def catalog_dump_json(context, env='production')
+      catalog = context.subject
+      catalog = catalog.call if catalog.is_a? Proc
+      catalog.environment = env
+      JSON.pretty_generate(catalog)
+    end
 
     # Dumps the entire catalog structure to the text
     # representation in the Puppet language
@@ -126,7 +137,7 @@ module Noop
 
     # @return [Pathname]
     def file_name_task_catalog
-      Noop::Utils.convert_to_path "#{file_name_base_task_report}.pp"
+      Noop::Utils.convert_to_path "#{file_name_base_task_report}"
     end
 
     # @return [Pathname]
@@ -134,7 +145,7 @@ module Noop
       dir_path_catalogs + file_name_task_catalog
     end
 
-    # Write the catalog file of this task
+    # Write the catalog files of this task
     # using the data from RSpec context
     # @param context [Object] the context from the rspec test
     # @return [void]
@@ -142,8 +153,12 @@ module Noop
       dir_path_catalogs.mkpath
       error "Catalog directory '#{dir_path_catalogs}' doesn't exist!" unless dir_path_catalogs.directory?
       debug "Writing catalog file: #{file_path_task_catalog}"
-      File.open(file_path_task_catalog.to_s, 'w') do |file|
+      File.open("#{file_path_task_catalog.to_s}.pp", 'w') do |file|
         file.puts catalog_dump context
+      end
+      debug "Writing full compiled JSON catalog file: #{file_path_task_catalog}.json"
+      File.open("#{file_path_task_catalog.to_s}.json", 'w') do |file|
+        file.puts catalog_dump_json context
       end
     end
 
