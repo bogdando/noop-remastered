@@ -7,7 +7,6 @@ module Noop
       puppet_resource_scope_override
       rspec_coverage_add_override
       return unless file_name_spec_set?
-      hiera_config_override
       setup_manifest
     end
 
@@ -21,41 +20,6 @@ module Noop
       # FIXME: kludge to support calling Puppet function outside of the test context
       Puppet.settings[:modulepath] = RSpec.configuration.module_path
       Puppet.settings[:manifest] = RSpec.configuration.manifest_dir
-    end
-
-    # Override Hiera configuration in the Puppet objects
-    def hiera_config_override
-      class << HieraPuppet
-        def hiera
-          @hiera ||= Hiera.new(:config => hiera_config)
-          Hiera.logger = 'noop'
-          @hiera
-        end
-      end
-
-      class << Hiera::Config
-        def config
-          @config
-        end
-
-        def config=(value)
-          @config = value
-        end
-
-        def load(source)
-          @config ||= {}
-        end
-
-        def yaml_load_file(source)
-          @config ||= {}
-        end
-
-        def []=(key, value)
-          @config ||= {}
-          @config[key] = value
-        end
-      end
-      Hiera::Config.config = hiera_config
     end
 
     # Ask Puppet to save the current scope reference to the task instance
@@ -91,7 +55,6 @@ module Noop
           :confdir => '/dev/null',
           :vardir => '/dev/null',
           :rundir => '/dev/null',
-          :hiera_config => '/dev/null',
       }
       defaults[:codedir] = '/dev/null' if puppet4?
       Puppet.settings.initialize_app_defaults(defaults)

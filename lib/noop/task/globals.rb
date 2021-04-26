@@ -3,7 +3,7 @@ module Noop
 
     # @return [Pathname]
     def file_path_globals
-      Noop::Config.dir_path_globals + file_name_hiera
+      Noop::Config.dir_path_globals
     end
 
     # @return [true,false]
@@ -20,18 +20,8 @@ module Noop
     end
 
     # @return [Pathname]
-    def file_name_globals
-      file_name_hiera
-    end
-
-    # @return [Pathname]
-    def file_base_globals
-      file_base_hiera
-    end
-
-    # @return [Pathname]
     def element_globals
-      Noop::Config.dir_name_globals + file_base_globals
+      Noop::Config.dir_name_globals
     end
   end
 end

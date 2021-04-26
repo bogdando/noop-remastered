@@ -41,17 +41,6 @@ module Noop
       end
     end
 
-    # Scan the Hiera directory and gather the list of Hiera files
-    # @return [Array<Pathname>]
-    def hiera_file_names
-      return @hiera_file_names if @hiera_file_names
-      error "No #{Noop::Config.dir_path_hiera} directory!" unless Noop::Config.dir_path_hiera.directory?
-      exclude = [ Noop::Config.dir_name_hiera_override, Noop::Config.dir_name_globals, Noop::Config.file_name_hiera_plugins ]
-      @hiera_file_names = find_files(Noop::Config.dir_path_hiera, Noop::Config.dir_path_hiera, exclude) do |file|
-        file.to_s.end_with? '.yaml'
-      end
-    end
-
     # Scan the facts directory and gather the list of facts files
     # @return [Array<Pathname>]
     def facts_file_names
@@ -138,52 +127,6 @@ module Noop
       @assign_spec_to_roles
     end
 
-    # Try to determine the roles of each Hiera file.
-    # Take 'nodes' structure and find 'node_roles' of the current node their.
-    # Form a set of found values and add root 'role' value if found.
-    # @return [Hash<Pathname => Set>]
-    def assign_hiera_to_roles
-      return @assign_hiera_to_roles if @assign_hiera_to_roles
-      @assign_hiera_to_roles = {}
-      hiera_file_names.each do |hiera_file|
-        begin
-          data = YAML.load_file(Noop::Config.dir_path_hiera + hiera_file)
-          next unless data.is_a? Hash
-          fqdn = data['fqdn']
-          next unless fqdn
-          nodes = data.fetch('network_metadata', {}).fetch('nodes', nil)
-          next unless nodes
-          this_node = nodes.find do |node|
-            node.last['fqdn'] == fqdn
-          end
-          node_roles = this_node.last['node_roles']
-          roles = Set.new
-          roles.merge node_roles if node_roles.is_a? Array
-          role = data['role']
-          roles.add role if role
-          @assign_hiera_to_roles[hiera_file] = roles
-        rescue
-          next
-        end
-      end
-      @assign_hiera_to_roles
-    end
-
-    # Determine Hiera files for each spec file by calculating
-    # the intersection between their roles sets.
-    # If the spec file contains '*' role it should be counted
-    # as all possible roles.
-    # @return [Hash<Pathname => Pathname]
-    def assign_spec_to_hiera
-      return @assign_spec_to_hiera if @assign_spec_to_hiera
-      @assign_spec_to_hiera = {}
-      assign_spec_to_roles.each do |file_name_spec, spec_roles_set|
-        hiera_files = get_hiera_for_roles spec_roles_set
-        @assign_spec_to_hiera[file_name_spec] = hiera_files if hiera_files.any?
-      end
-      @assign_spec_to_hiera
-    end
-
     # Read all spec annotations metadata.
     # @return [Hash<Pathname => Array>]
     def spec_run_metadata
@@ -211,19 +154,9 @@ module Noop
         text.split("\n").each do |line|
           line = line.downcase
 
-          if line =~ /^\s*#\s*(?:yamls|hiera):\s*(.*)/
-            task_spec_metadata[:hiera] = [] unless task_spec_metadata[:hiera].is_a? Array
-            task_spec_metadata[:hiera] += get_list_of_yamls $1
-          end
-
           if line =~ /^\s*#\s*facts:\s*(.*)/
             task_spec_metadata[:facts] = [] unless task_spec_metadata[:facts].is_a? Array
             task_spec_metadata[:facts] += get_list_of_yamls $1
-          end
-
-          if line =~ /^\s*#\s*(?:skip_yamls|skip_hiera):\s(.*)/
-            task_spec_metadata[:skip_hiera] = [] unless task_spec_metadata[:skip_hiera].is_a? Array
-            task_spec_metadata[:skip_hiera] += get_list_of_yamls $1
           end
 
           if line =~ /^\s*#\s*skip_facts:\s(.*)/
@@ -243,10 +176,9 @@ module Noop
 
           if line =~ /^\s*#\s*run:\s*(.*)/
             run_record = get_list_of_yamls $1
-            if run_record.length >= 2
+            if run_record.length >= 1
               run_record = {
-                  :hiera => run_record[0],
-                  :facts => run_record[1],
+                  :facts => run_record[0],
               }
               task_spec_metadata[:runs] = [] unless task_spec_metadata[:runs].is_a? Array
               task_spec_metadata[:runs] << run_record
@@ -273,61 +205,25 @@ module Noop
 
     # Determine the list of run records for a spec file:
     # Take a list of explicitly defined runs if present.
-    # Make product of allowed Hiera and facts yaml files to
+    # Make product of allowed facts yaml files to
     # form more run records.
     # Use the default facts file name if there is none
     # is given in the annotation.
-    # Use the list of Hiera files determined by the intersection of
-    # deployment graph metadata and Hiera yaml contents using roles
-    # as a common data.
     def get_spec_runs(file_name_spec)
       file_name_spec = Noop::Utils.convert_to_path file_name_spec
       metadata = spec_run_metadata.fetch file_name_spec, {}
       metadata[:facts] = [Noop::Config.default_facts_file_name] unless metadata[:facts]
 
-      if metadata[:roles]
-        metadata[:hiera] = [] unless metadata[:hiera]
-        metadata[:hiera] += get_hiera_for_roles metadata[:roles]
-      end
-
-      # the last default way to get hiera files list
-      metadata[:hiera] = assign_spec_to_hiera.fetch file_name_spec, [] unless metadata[:hiera]
-
       runs = []
-      metadata[:facts].product metadata[:hiera] do |facts, hiera|
-        next if metadata[:skip_hiera].is_a? Array and metadata[:skip_hiera].include? hiera
-        next if metadata[:skip_facts].is_a? Array and metadata[:skip_facts].include? hiera
+      metadata[:facts].product do |facts|
+        next if metadata[:skip_facts].is_a? Array and metadata[:skip_facts].include? facts
         run_record = {
-            :hiera => hiera,
             :facts => facts,
         }
         runs << run_record
       end
       runs += metadata[:runs] if metadata[:runs].is_a? Array
       runs
-    end
-
-    # Get a list of Hiera YAML files which roles
-    # include the given set of roles
-    # @param roles [Array,Set,String]
-    # @return [Array]
-    def get_hiera_for_roles(*roles)
-      all_roles = Set.new
-      roles.flatten.each do |role|
-        if role.is_a? Set
-          all_roles += role
-        else
-          all_roles.add role
-        end
-      end
-      if all_roles.include? '*'
-        assign_hiera_to_roles.keys
-      else
-        assign_hiera_to_roles.select do |_file_name_hiera, hiera_roles_set|
-          roles_intersection = hiera_roles_set & all_roles
-          roles_intersection.any?
-        end.keys
-      end
     end
 
     # Check if the given element matches this filter
@@ -351,12 +247,6 @@ module Noop
     # @return [true,false]
     def facts_included?(facts)
       filter_is_matched? options[:filter_facts], facts
-    end
-
-    # Use filters to check if this Hiera file is included
-    # @return [true,false]
-    def hiera_included?(hiera)
-      filter_is_matched? options[:filter_hiera], hiera
     end
 
     # Check if the globals spec should be skipped.
@@ -387,36 +277,14 @@ module Noop
         next if skip_globals? file_name_spec
         next unless spec_included? file_name_spec
         get_spec_runs(file_name_spec).each do |run|
-          next unless run[:hiera] and run[:facts]
+          next unless run[:facts]
           next unless facts_included? run[:facts]
-          next unless hiera_included? run[:hiera]
-          task = Noop::Task.new file_name_spec, run[:hiera], run[:facts]
+          task = Noop::Task.new file_name_spec, run[:facts]
           task.parallel = true if parallel_run?
           @task_list << task
         end
       end
       @task_list
-    end
-
-    # Collect all hiera plugins into a data structure.
-    # Used only for debugging purposes.
-    # @return [Hash<String => Pathname>]
-    def hiera_plugins
-      return @hiera_plugins if @hiera_plugins
-      @hiera_plugins = {}
-      return @hiera_plugins unless Noop::Config.file_path_hiera_plugins.directory?
-      Noop::Config.file_path_hiera_plugins.children.each do |hiera|
-        next unless hiera.directory?
-        hiera_name = hiera.basename.to_s
-        hiera.children.each do |file|
-          next unless file.file?
-          next unless file.to_s.end_with? '.yaml'
-          file = file.relative_path_from Noop::Config.dir_path_hiera
-          @hiera_plugins[hiera_name] = [] unless @hiera_plugins[hiera_name]
-          @hiera_plugins[hiera_name] << file
-        end
-      end
-      @hiera_plugins
     end
 
     # Loop through all task files and find those that

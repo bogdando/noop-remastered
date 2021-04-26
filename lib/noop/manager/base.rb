@@ -82,17 +82,7 @@ module Noop
     # Check if there are some filters defined
     # @return [true,false]
     def has_filters?
-      options[:filter_specs] or options[:filter_facts] or options[:filter_hiera] or options[:filter_examples]
-    end
-
-    # Output a list of all discovered Hiera file names taking filers into account
-    # @return [void]
-    def list_hiera_files
-      hiera_file_names.sort.each do |file_name_hiera|
-        next unless hiera_included? file_name_hiera
-        output file_name_hiera
-      end
-      exit(0)
+      options[:filter_specs] or options[:filter_facts] or options[:filter_examples]
     end
 
     # Output a list of all discovered facts file names taking filers into account
@@ -198,7 +188,6 @@ module Noop
         exit(0)
       end
 
-      list_hiera_files if options[:list_hiera]
       list_facts_files if options[:list_facts]
       list_spec_files if options[:list_specs]
       list_task_files if options[:list_tasks]

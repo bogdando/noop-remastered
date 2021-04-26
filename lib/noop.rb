@@ -13,20 +13,12 @@ module Noop
     self.task.file_name_spec = value
   end
 
-  def self.task_hiera=(value)
-    self.task.file_name_hiera = value
-  end
-
   def self.task_facts=(value)
     self.task.file_name_facts = value
   end
 
   def self.task_spec
     self.task.file_name_spec
-  end
-
-  def self.task_hiera
-    self.task.file_name_hiera
   end
 
   def self.task_facts

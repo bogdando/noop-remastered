@@ -51,7 +51,6 @@ def run_test(manifest_file, *args)
   ENV['SPEC_TASK_DIR'] = '.'
   ENV['SPEC_REPORTS_DIR'] = '.'
   ENV['SPEC_FACTS_DIR'] = '.'
-  ENV['SPEC_HIERA_DIR'] = '.'
   Noop.task_spec = manifest_file
 
   Noop::Config.log.progname = 'noop_spec'

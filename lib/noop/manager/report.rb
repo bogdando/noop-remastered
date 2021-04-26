@@ -12,7 +12,6 @@ module Noop
       line = task_status_string task
       line += "#{task.file_base_spec.to_s.ljust max_length_spec + 1}"
       line += "#{task.file_base_facts.to_s.ljust max_length_facts + 1}"
-      line += "#{task.file_base_hiera.to_s.ljust max_length_hiera + 1}"
       output line
       output_task_examples task unless options[:report_only_tasks]
     end
@@ -80,15 +79,6 @@ module Noop
       return @max_length_spec if @max_length_spec
       @max_length_spec = task_list.map do |task|
         task.file_base_spec.to_s.length
-      end.max
-    end
-
-    # Find the length of the longest Hiera file name
-    # @return [Integer]
-    def max_length_hiera
-      return @max_length_hiera if @max_length_hiera
-      @max_length_hiera = task_list.map do |task|
-        task.file_base_hiera.to_s.length
       end.max
     end
 
@@ -175,10 +165,6 @@ module Noop
         options[:filter_facts] = [options[:filter_facts]] unless options[:filter_facts].is_a? Array
         output "Facts filter: #{options[:filter_facts].join(', ').colorize :green}"
       end
-      if options[:filter_hiera]
-        options[:filter_hiera] = [options[:filter_hiera]] unless options[:filter_hiera].is_a? Array
-        output "Hiera filter: #{options[:filter_hiera].join(', ').colorize :green}"
-      end
       if options[:filter_examples]
         options[:filter_examples] = [options[:filter_examples]] unless options[:filter_examples].is_a? Array
         output "Examples filter: #{options[:filter_examples].join(', ').colorize :green}"
@@ -190,7 +176,6 @@ module Noop
       template = <<-'eof'
 Tasks discovered: <%= task_file_names.length.to_s.colorize :green %>
 Specs discovered: <%= spec_file_names.length.to_s.colorize :green %>
-Hiera discovered: <%= hiera_file_names.length.to_s.colorize :green %>
 Facts discovered: <%= facts_file_names.length.to_s.colorize :green %>
 
 Tasks in graph metadata:  <%= task_graph_metadata.length.to_s.colorize :yellow %>
@@ -210,8 +195,6 @@ Total tasks to run:       <%= task_list.count.to_s.colorize :yellow %>
           :dir_path_tasks_local,
           :dir_path_deployment,
           :dir_path_workspace,
-          :dir_path_hiera,
-          :dir_path_hiera_override,
           :dir_path_facts,
           :dir_path_facts_override,
           :dir_path_globals,
@@ -230,8 +213,7 @@ Total tasks to run:       <%= task_list.count.to_s.colorize :yellow %>
       end
     end
 
-    # Output a list of specs that have not been matched to any Hiera files
-    # and will never run
+    # Output a list of specs that will never run
     def list_unmatched_specs
       unmatched_specs = find_unmatched_specs.to_a
       if unmatched_specs.any?

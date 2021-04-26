@@ -27,7 +27,7 @@ module Noop
 
     # @return [Pathname]
     def self.dir_path_globals
-      dir_path_hiera + dir_name_globals
+      dir_name_globals
     end
   end
 end

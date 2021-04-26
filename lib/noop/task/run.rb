@@ -48,14 +48,13 @@ module Noop
       options
     end
 
-    # Run the RSpec command and pass Hiera, facts and spec files names
+    # Run the RSpec command and pass facts and spec files names
     # using the environment variables.
     # Use bundler if it's enabled.
     # Set the task status according to the RSpec exit code.
     # @return [true,false]
     def rspec_command_run
       environment = {
-          'SPEC_HIERA_NAME' => file_name_hiera.to_s,
           'SPEC_FACTS_NAME' => file_name_facts.to_s,
           'SPEC_FILE_NAME' => file_name_spec.to_s,
           'GEM_HOME' => Noop::Config.dir_path_gem_home.to_s,
@@ -63,7 +62,6 @@ module Noop
           'SPEC_ROOT_DIR' => Noop::Config.dir_path_root.to_s,
           'SPEC_TASK_ROOT_DIR' => Noop::Config.dir_path_task_root.to_s,
           'SPEC_DEPLOYMENT_DIR' => Noop::Config.dir_path_deployment.to_s,
-          'SPEC_HIERA_DIR' => Noop::Config.dir_path_hiera.to_s,
           'SPEC_FACTS_DIR' => Noop::Config.dir_path_facts.to_s,
           'SPEC_REPORTS_DIR' => Noop::Config.dir_path_reports.to_s,
           'SPEC_SPEC_DIR' => Noop::Config.dir_path_task_spec.to_s,

@@ -48,9 +48,6 @@ module Noop
         end
 
         opts.separator 'List options:'
-        opts.on('-Y', '--list_hiera', 'List all hiera yaml files') do
-          @options[:list_hiera] = true
-        end
         opts.on('-S', '--list_specs', 'List all task spec files') do
           @options[:list_specs] = true
         end
@@ -64,9 +61,6 @@ module Noop
         opts.separator 'Filter options:'
         opts.on('-s', '--specs SPEC1,SPEC2', Array, 'Run only these spec files. Example: "hosts/hosts_spec.rb,apache/apache_spec.rb"') do |specs|
           @options[:filter_specs] = specs
-        end
-        opts.on('-y', '--yamls YAML1,YAML2', Array, 'Run only these hiera yamls. Example: "controller.yaml,compute.yaml"') do |yamls|
-          @options[:filter_hiera] = yamls
         end
         opts.on('-f', '--facts FACTS1,FACTS2', Array, 'Run only these facts yamls. Example: "ubuntu16.yaml,centos7.yaml"') do |yamls|
           @options[:filter_facts] = yamls
@@ -104,9 +98,6 @@ module Noop
         end
         opts.on('--dir_deployment DIR', 'Path to the test deployment folder') do |dir|
           ENV['SPEC_DEPLOYMENT_DIR'] = dir
-        end
-        opts.on('--dir_hiera_yamls DIR', 'Path to the folder with hiera files') do |dir|
-          ENV['SPEC_HIERA_DIR'] = dir
         end
         opts.on('--dir_facts_yamls DIR', 'Path to the folder with facts yaml files') do |dir|
           ENV['SPEC_FACTS_DIR'] = dir

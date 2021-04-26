@@ -14,7 +14,6 @@ module Noop
         task_hash[:name] = task.to_s
         task_hash[:description] = task.description
         task_hash[:spec] = task.file_name_spec.to_s
-        task_hash[:hiera] = task.file_name_hiera.to_s
         task_hash[:facts] = task.file_name_facts.to_s
         task_hash[:task] = task.file_name_manifest.to_s
         task_hash[:examples] = []
@@ -84,9 +83,6 @@ module Noop
         property_spec = properties.add_element 'property'
         property_spec.add_attribute 'name', 'spec'
         property_spec.add_attribute 'value', task[:spec]
-        property_hiera = properties.add_element 'property'
-        property_hiera.add_attribute 'name', 'hiera'
-        property_hiera.add_attribute 'value', task[:hiera]
         property_facts = properties.add_element 'property'
         property_facts.add_attribute 'name', 'facts'
         property_facts.add_attribute 'value', task[:facts]
