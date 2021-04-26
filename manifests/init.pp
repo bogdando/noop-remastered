@@ -1,5 +1,5 @@
+class test (){
   $a = undef
-  class { 'stdlib': };include ::stdlib;include ::stdlib
   if $a and downcase($a) {
     validate_legacy(String, 'validate_re', $a, ["^b$", "^c$"])
   }
@@ -58,3 +58,4 @@
       ensure =>  present
     }
   }
+}
