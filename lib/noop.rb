@@ -1,8 +1,6 @@
 require_relative 'noop/utils'
 require_relative 'noop/config'
-require_relative 'noop/manager'
 require_relative 'noop/task'
-require_relative 'noop/matchers'
 
 module Noop
   def self.new_task(*args)

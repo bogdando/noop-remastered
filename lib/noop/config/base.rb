@@ -79,19 +79,7 @@ module Noop
     # @return [Pathname]
     def self.dir_path_tasks_node
       return @dir_path_tasks_node if @dir_path_tasks_node
-      @dir_path_tasks_node = dir_path_modules_node + 'osnailyfacter' + 'modular'
-    end
-
-    # @return [Pathname]
-    def self.dir_path_deployment
-      return @dir_path_deployment if @dir_path_deployment
-      @dir_path_deployment = Noop::Utils.path_from_env 'SPEC_DEPLOYMENT_DIR'
-      @dir_path_deployment = dir_path_root + 'deployment' unless @dir_path_deployment
-      begin
-        @dir_path_deployment = @dir_path_deployment.realpath
-      rescue
-        @dir_path_deployment
-      end
+      @dir_path_tasks_node = dir_path_modules_node + 'tripleo' + 'manifests'
     end
 
     # Workspace directory where gem bundle will be created
@@ -111,33 +99,5 @@ module Noop
       @dir_path_workspace
     end
 
-    # The name of the gem home directory
-    # @return [Pathname]
-    def self.dir_name_gem_home
-      Pathname.new 'bundled_gems'
-    end
-
-    # Get a GEM_HOME either from the environment (using RVM)
-    # or from the default value (using bundle)
-    # @return [Pathname]
-    def self.dir_path_gem_home
-      return @dir_path_gem_home if @dir_path_gem_home
-      @dir_path_gem_home = Noop::Utils.path_from_env 'GEM_HOME'
-      return @dir_path_gem_home if @dir_path_gem_home
-      @dir_path_gem_home = dir_path_workspace + dir_name_gem_home
-      @dir_path_gem_home
-    end
-
-    # @return [Pathname]
-    def self.dir_path_reports
-      return @dir_path_reports if @dir_path_reports
-      @dir_path_reports = Noop::Utils.path_from_env 'SPEC_REPORTS_DIR'
-      @dir_path_reports = dir_path_root + 'reports' unless @dir_path_reports
-      begin
-        @dir_path_reports = @dir_path_reports.realpath
-      rescue
-        @dir_path_reports
-      end
-    end
   end
 end
