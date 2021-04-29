@@ -1,4 +1,4 @@
-require 'yaml'
+require 'json'
 
 module Noop
   class Task
@@ -16,7 +16,7 @@ module Noop
     def file_name_facts=(value)
       return if value.nil?
       @file_name_facts = Noop::Utils.convert_to_path value
-      @file_name_facts = @file_name_facts.sub_ext '.yaml' if @file_name_facts.extname == ''
+      @file_name_facts = @file_name_facts.sub_ext '.json' if @file_name_facts.extname == ''
     end
     alias :facts= :file_name_facts=
 
@@ -25,39 +25,23 @@ module Noop
       file_name_facts.basename.sub_ext ''
     end
 
-    # @return [Pathname]
-    def file_path_facts
-      Noop::Config.dir_path_facts + file_name_facts
-    end
-
-    # @return [true,false]
-    def file_present_facts?
-      return false unless file_path_facts
-      file_path_facts.readable?
-    end
-
-    # @return [Pathname]
-    def file_name_facts_override
-      file_name_task_extension
-    end
-
-    # @return [Pathname]
-    def file_path_facts_override
-      Noop::Config.dir_path_facts_override + file_name_facts_override
-    end
-
-    # @return [true,false]
-    def file_present_facts_override?
-      return unless file_path_facts_override
-      file_path_facts_override.readable?
+    # @return [Array<Pathname>]
+    def file_paths_facts
+      file_paths = Noop::Config.default_facts_cache_files
+      file_paths += Dir.entries(Noop::Config.dir_path_facts).map do |e|
+        Noop::Config.dir_path_facts + e
+      end.select do |f|
+        File.file? f
+      end.map {|f| Pathname.new f}
+      file_paths << Pathname.new(file_name_facts)
+      file_paths.uniq
     end
 
     # @return [Array<String>]
     def facts_hierarchy
-      file_paths = []
-      file_paths << file_path_facts.to_s if file_present_facts?
-      file_paths << file_path_facts_override.to_s if file_present_facts_override?
-      file_paths
+      file_paths_facts.select do |f|
+        not f.empty? and  f.readable? or f.sub_ext('').readable?
+      end
     end
 
     # @return [Hash]
@@ -65,7 +49,7 @@ module Noop
       facts_data = {}
       facts_hierarchy.each do |file_path|
         begin
-          file_data = YAML.load_file file_path
+          file_data = JSON.load_file file_path
           next unless file_data.is_a? Hash
           file_data = Noop::Utils.symbolize_hash_to_keys file_data
           facts_data.merge! file_data
@@ -75,8 +59,6 @@ module Noop
       end
       facts_data
     end
-    alias :ubuntu_facts :facts_data
-    alias :centos_facts :facts_data
 
     # @return [String,nil]
     def hostname

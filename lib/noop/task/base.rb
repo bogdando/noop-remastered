@@ -87,7 +87,7 @@ module Noop
         return valid
       end
       unless file_present_facts?
-        warning "No facts file: #{file_path_facts}!"
+        warning "No facts files: #{file_paths_facts}!"
         self.valid = false
         return valid
       end

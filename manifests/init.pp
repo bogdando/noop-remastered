@@ -4,12 +4,12 @@ class test (){
     validate_legacy(String, 'validate_re', $a, ["^b$", "^c$"])
   }
   [1,2,3,4,5,6,7,8,9,10].each |Integer $index, Integer $value| {
-    file { "/tmp/xxx0${index}-${value}": 
+    file { "/tmp/xxx${step}-${kernel}-${index}-${value}": 
       ensure =>  present
     }
   }
   [1,2,3,4,5,6,7,8,9,10].each |Integer $index, Integer $value| {
-    file { "/tmp/xxx1${index}-${value}": 
+    file { "/tmp/xxx-${extra}-${test_fact}-${index}-${value}": 
       ensure =>  present
     }
   }
