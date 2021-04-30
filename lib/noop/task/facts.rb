@@ -49,7 +49,7 @@ module Noop
       facts_data = {}
       facts_hierarchy.each do |file_path|
         begin
-          file_data = JSON.load_file file_path
+          file_data = JSON.parse(File.read file_path)
           next unless file_data.is_a? Hash
           file_data = Noop::Utils.symbolize_hash_to_keys file_data
           facts_data.merge! file_data
