@@ -6,13 +6,19 @@ test_class = 'test'   # points spec/classes/test_spec.rb (in SPEC_SPEC_DIR)
 ###############################################################################
 
 def run_test(manifest_file, *args)
-  ENV['SPEC_TASK_DEBUG'] = 'yes'  
-  ENV['SPEC_ROOT_DIR'] = '.' # where to put generated catalog
-  ENV['SPEC_MODULE_PATH'] = '../' # where to look for included resources
-  ENV['SPEC_SPEC_DIR'] = 'spec/classes' # where to look for the test_class spec
-  ENV['SPEC_TASK_DIR'] = 'manifests'  # where to look for the manifiest file
-  ENV['SPEC_FACTS_DIR'] = 'cached_facts'  # contains cached facts
-  ENV['SPEC_FACTS_NAME'] = 'top_facts.json' # custom overrides
+  ENV['SPEC_TASK_DEBUG'] = 'yes' if not ENV['SPEC_TASK_DEBUG']
+  # where to put generated catalog
+  ENV['SPEC_ROOT_DIR'] = '.' if not ENV['SPEC_ROOT_DIR']
+  # where to look for included resources
+  ENV['SPEC_MODULE_PATH'] = '../' if not ENV['SPEC_MODULE_PATH']
+  # where to look for the test_class spec
+  ENV['SPEC_SPEC_DIR'] = 'spec/classes' if not ENV['SPEC_SPEC_DIR'] 
+  # where to look for the manifiest file
+  ENV['SPEC_TASK_DIR'] = 'manifests'  if not ENV['SPEC_TASK_DIR']
+  # contains cached facts
+  ENV['SPEC_FACTS_DIR'] = 'cached_facts' if not ENV['SPEC_FACTS_DIR']
+  # custom overrides
+  ENV['SPEC_FACTS_NAME'] = 'top_facts.json' if not ENV['SPEC_FACTS_NAME']
   Noop.task_spec = manifest_file
 
   Noop::Config.log.progname = 'catalog-compile'
