@@ -27,8 +27,7 @@ module Noop
 
     # @return [Array<Pathname>]
     def file_paths_facts
-      file_paths = Noop::Config.default_facts_cache_files
-      file_paths += Dir.entries(Noop::Config.dir_path_facts).map do |e|
+      file_paths = Dir.entries(Noop::Config.dir_path_facts).map do |e|
         Noop::Config.dir_path_facts + e
       end.select do |f|
         File.file? f
