@@ -3,6 +3,7 @@ class test (){
   if $a and downcase($a) {
     validate_legacy(String, 'validate_re', $a, ["^b$", "^c$"])
   }
+  notify{hiera("tripleo::haproxy::controller_virtual_ip", "123"):}
   [1,2,3,4,5,6,7,8,9,10].each |Integer $index, Integer $value| {
     file { "/tmp/xxx${step}-${kernel}-${index}-${value}": 
       ensure =>  present

@@ -1,4 +1,4 @@
-require 'spec_helper'
+require_relative '../../lib/noop'
 
 manifest = 'init.pp'  # points manifests/init.pp (in SPEC_TASK_DIR)
 test_class = 'test'   # points spec/classes/test_spec.rb (in SPEC_SPEC_DIR)

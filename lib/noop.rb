@@ -1,5 +1,6 @@
 require_relative 'noop/utils'
 require_relative 'noop/config'
+require_relative 'noop/helper'
 require_relative 'noop/task'
 
 module Noop
